@@ -1,0 +1,49 @@
+m.Center(
+child: m.Container(
+                          padding: const m.EdgeInsets.all(4),
+                          decoration: m.BoxDecoration(
+                            color: m.Colors.white.withOpacity(0.1),
+                            borderRadius: m.BorderRadius.circular(25),
+                          ),
+                          child: m.Row(
+                            mainAxisSize: m.MainAxisSize.min,
+                            children: [
+                              _buildTab("Sleep", true),
+                              _buildTab("Heart", false),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const m.SizedBox(height: 32),
+
+                        m.Widget _buildTab(String label, bool isActive) {
+                          return m.Container(
+                            padding: const m.EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+                            decoration: m.BoxDecoration(
+                              color: isActive ? m.Colors.white : m.Colors.transparent,
+                              borderRadius: m.BorderRadius.circular(20),
+                            ),
+                            child: m.Row(
+                              children: [
+                                if (isActive)
+                                  m.Padding(
+                                    padding: const m.EdgeInsets.only(right: 8),
+                                    child: m.Icon(
+                                      m.Icons.bedtime,
+                                      color: const m.Color(0xFF8B5CF6),
+                                      size: 16,
+                                    ),
+                                  ),
+                                m.Text(
+                                  label,
+                                  style: m.TextStyle(
+                                    color: isActive ? const m.Color(0xFF8B5CF6) : m.Colors.white70,
+                                    fontSize: 14,
+                                    fontWeight: isActive ? m.FontWeight.w600 : m.FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
