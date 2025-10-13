@@ -193,7 +193,7 @@ class LandingScreenState extends State<LandingScreen>
                             ),
                           ),
 
-                          SizedBox(height: 100),
+                          SizedBox(height: 60),
 
                           FadeTransition(
                             opacity: _fadeAnimation,
@@ -230,6 +230,7 @@ class LandingScreenState extends State<LandingScreen>
                               ),
                             ),
                           ),
+                          const Spacer(flex: 3),
                         ],
                       ),
                     );

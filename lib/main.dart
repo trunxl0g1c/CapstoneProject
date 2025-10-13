@@ -1,13 +1,13 @@
 import 'package:capstone/provider/nav_provider.dart';
 import 'package:capstone/provider/sleep_provider.dart';
 import 'package:capstone/provider/theme_provider.dart';
-import 'package:capstone/theme.dart';
-import 'package:capstone/ui/pages/home_screen.dart';
-import 'package:capstone/ui/pages/landing_screen.dart';
+import 'package:capstone/ui/pages/splash_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const CapstoneApp());
 }
 
@@ -16,39 +16,39 @@ class CapstoneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // warna tema dari Project Owl
+    const Color darkPurple = Color(0xFF191825);
+    const Color primaryPurple = Color(0xFF865DFF);
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
         ChangeNotifierProvider(create: (_) => SleepProvider()),
         ChangeNotifierProvider(create: (_) => NavProvider()),
       ],
-      child: Builder(
-        builder: (context) {
-          final themeProvider = Provider.of<ThemeProvider>(context);
-
-          return ShadcnApp(
-            title: "Restaurant",
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.owlLightTheme,
-            darkTheme: AppTheme.owlDarkTheme,
-            themeMode: themeProvider.themeMode,
-            initialRoute: '/',
-            onGenerateRoute: (settings) {
-              if (settings.name == '/') {
-                return MaterialPageRoute(builder: (_) => const LandingScreen());
-              }
-              // } else if (settings.name == '/detail') {
-              //   final id = settings.arguments as String;
-              //   return MaterialPageRoute(
-              //     builder: (_) => RestaurantDetailPage(id: id),
-              //   );
-              else if (settings.name == "/dashboard") {
-                return MaterialPageRoute(builder: (_) => const HomeScreen());
-              }
-              return null;
-            },
-          );
-        },
+      
+      child: MaterialApp(
+        title: "Project Owl",
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: darkPurple,
+          primaryColor: primaryPurple,
+          textTheme: GoogleFonts.poppinsTextTheme(
+            ThemeData.dark().textTheme,
+          ).apply(bodyColor: Colors.white, displayColor: Colors.white),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+        home: const SplashScreen(),
       ),
     );
   }

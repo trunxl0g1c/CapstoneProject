@@ -7,6 +7,7 @@ class SleepProvider extends ChangeNotifier {
 
   TimeOfDay? _jamTidur;
   TimeOfDay? _jamBangun;
+  int _stressLevel = 3; 
   SleepRecord? _todayRecord;
   List<SleepRecord> _weeklyRecords = [];
   double _weeklyAverageDuration = 0;
@@ -14,6 +15,7 @@ class SleepProvider extends ChangeNotifier {
 
   TimeOfDay? get jamTidur => _jamTidur;
   TimeOfDay? get jamBangun => _jamBangun;
+  int get stressLevel => _stressLevel; 
   SleepRecord? get todayRecord => _todayRecord;
   List<SleepRecord> get weeklyRecords => _weeklyRecords;
   double get weeklyAverageDuration => _weeklyAverageDuration;
@@ -26,29 +28,17 @@ class SleepProvider extends ChangeNotifier {
     try {
       final today = DateTime.now();
       final record = await _storageService.readRecordByDate(today);
-      final weekly = await _storageService.readWeeklyRecords();
-      final avgDuration = await _storageService.getWeeklyAverageDuration();
-
       _todayRecord = record;
-      _weeklyRecords = weekly;
-      _weeklyAverageDuration = avgDuration;
 
       if (record != null) {
         final sleepParts = record.sleepTime.split(':');
         final wakeParts = record.wakeTime.split(':');
-
         _jamTidur = TimeOfDay(
-          hour: int.parse(sleepParts[0]),
-          minute: int.parse(sleepParts[1]),
-        );
-
+            hour: int.parse(sleepParts[0]), minute: int.parse(sleepParts[1]));
         _jamBangun = TimeOfDay(
-          hour: int.parse(wakeParts[0]),
-          minute: int.parse(wakeParts[1]),
-        );
+            hour: int.parse(wakeParts[0]), minute: int.parse(wakeParts[1]));
+        _stressLevel = record.stressLevel; 
       }
-    } catch (e) {
-      debugPrint('Error loading data: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -57,32 +47,36 @@ class SleepProvider extends ChangeNotifier {
 
   void setJamTidur(TimeOfDay time) {
     _jamTidur = time;
+    if (_jamBangun != null) saveSleepRecord();
     notifyListeners();
-
-    if (_jamBangun != null) {
-      saveSleepRecord();
-    }
   }
 
   void setJamBangun(TimeOfDay time) {
     _jamBangun = time;
+    if (_jamTidur != null) saveSleepRecord();
     notifyListeners();
+  }
 
-    if (_jamTidur != null) {
-      saveSleepRecord();
-    }
+
+  void setStressLevel(int level) {
+    _stressLevel = level;
+    if (_jamTidur != null && _jamBangun != null) saveSleepRecord();
+    notifyListeners();
   }
 
   Duration? calculateDuration() {
     if (_jamTidur == null || _jamBangun == null) return null;
+    final sleepDateTime =
+        DateTime(2023, 1, 1, _jamTidur!.hour, _jamTidur!.minute);
+    final wakeDateTime =
+        DateTime(2023, 1, 1, _jamBangun!.hour, _jamBangun!.minute);
 
-    final sleepMinutes =
-        (_jamBangun!.hour * 60 + _jamBangun!.minute) -
-        (_jamTidur!.hour * 60 + _jamTidur!.minute);
-
-    return Duration(
-      minutes: sleepMinutes >= 0 ? sleepMinutes : sleepMinutes + 24 * 60,
-    );
+    if (wakeDateTime.isBefore(sleepDateTime)) {
+      return wakeDateTime
+          .add(const Duration(days: 1))
+          .difference(sleepDateTime);
+    }
+    return wakeDateTime.difference(sleepDateTime);
   }
 
   double calculateQuality() {
@@ -90,29 +84,34 @@ class SleepProvider extends ChangeNotifier {
     if (duration == null) return 0.0;
 
     final hours = duration.inMinutes / 60;
+    double quality;
 
     if (hours >= 7 && hours <= 9) {
-      return 0.95;
+      quality = 0.95;
     } else if (hours >= 6 && hours < 7) {
-      return 0.75 + ((hours - 6) * 0.20);
+      quality = 0.75 + ((hours - 6) * 0.20);
     } else if (hours > 9 && hours <= 10) {
-      return 0.95 - ((hours - 9) * 0.15);
+      quality = 0.95 - ((hours - 9) * 0.15);
     } else if (hours >= 5 && hours < 6) {
-      return 0.60 + ((hours - 5) * 0.15);
+      quality = 0.60 + ((hours - 5) * 0.15);
     } else if (hours < 5) {
-      return (0.30 > hours * 0.12) ? 0.30 : hours * 0.12;
+      quality = (0.30 > hours * 0.12) ? 0.30 : hours * 0.12;
     } else {
-      return (0.50 > 0.80 - ((hours - 10) * 0.10))
+      quality = (0.50 > 0.80 - ((hours - 10) * 0.10))
           ? 0.50
           : 0.80 - ((hours - 10) * 0.10);
     }
+
+    
+    quality -= (_stressLevel - 3) * 0.05;
+    return quality.clamp(0.0, 1.0); 
   }
 
-  Future<bool> saveSleepRecord() async {
-    if (_jamTidur == null || _jamBangun == null) return false;
+  Future<void> saveSleepRecord() async {
+    if (_jamTidur == null || _jamBangun == null) return;
 
     final duration = calculateDuration();
-    if (duration == null) return false;
+    if (duration == null) return;
 
     final quality = calculateQuality();
 
@@ -124,50 +123,12 @@ class SleepProvider extends ChangeNotifier {
           '${_jamBangun!.hour.toString().padLeft(2, '0')}:${_jamBangun!.minute.toString().padLeft(2, '0')}',
       durationMinutes: duration.inMinutes,
       quality: quality,
+      stressLevel: _stressLevel, 
       date: DateTime.now(),
     );
 
-    try {
-      await _storageService.save(record);
-      _todayRecord = record;
-
-      await loadData();
-
-      return true;
-    } catch (e) {
-      debugPrint('Error saving record: $e');
-      return false;
-    }
-  }
-
-  Future<bool> deleteRecord(String id) async {
-    try {
-      final result = await _storageService.delete(id);
-      if (result) {
-        await loadData();
-      }
-      return result;
-    } catch (e) {
-      debugPrint('Error deleting record: $e');
-      return false;
-    }
-  }
-
-  Future<bool> clearAllData() async {
-    try {
-      final result = await _storageService.deleteAll();
-      if (result) {
-        _jamTidur = null;
-        _jamBangun = null;
-        _todayRecord = null;
-        _weeklyRecords = [];
-        _weeklyAverageDuration = 0;
-        notifyListeners();
-      }
-      return result;
-    } catch (e) {
-      debugPrint('Error clearing data: $e');
-      return false;
-    }
+    await _storageService.save(record);
+    _todayRecord = record;
+    notifyListeners();
   }
 }
