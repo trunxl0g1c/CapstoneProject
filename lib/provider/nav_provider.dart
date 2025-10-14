@@ -14,14 +14,15 @@ class NavProvider extends ChangeNotifier {
         Navigator.pushReplacementNamed(context, '/dashboard');
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/score');
+        Navigator.pushReplacementNamed(context, '/sleeps');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/analytics');
+        Navigator.pushReplacementNamed(context, '/settings');
         break;
       case 3:
         Navigator.pushReplacementNamed(context, '/users');
         break;
     }
   }
+
 }

@@ -68,8 +68,8 @@ class _ShadcnBottomNavState extends State<ShadcnBottomNav> {
           ),
           _buildNavItem(
             index: 2,
-            icon: Icons.analytics_outlined,
-            activeIcon: Icons.analytics,
+            icon: Icons.settings_outlined,
+            activeIcon: Icons.settings,
           ),
           _buildNavItem(
             index: 3,
@@ -103,9 +103,7 @@ class _ShadcnBottomNavState extends State<ShadcnBottomNav> {
         ),
         child: Icon(
           isSelected ? activeIcon : icon,
-          color: isSelected
-              ? Colors.white
-              : Colors.white.withValues(alpha: 0.5),
+          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
           size: 26,
         ),
       ),

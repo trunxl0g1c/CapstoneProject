@@ -4,15 +4,15 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.4.1 <4.0.0' # Menggunakan versi yang kompatibel
+  sdk: '>=3.4.1 <4.0.0' 
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # Semua package yang dibutuhkan aplikasi Anda
+  
   cupertino_icons: ^1.0.8
-  shadcn_flutter: ^0.0.44 # Menggunakan shadcn_flutter sesuai file Anda
+  shadcn_flutter: ^0.0.44 
   provider: ^6.1.5+1
   shared_preferences: ^2.5.3
   introduction_screen: ^3.1.12 
@@ -23,7 +23,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
 
-# Hanya ada satu bagian flutter di sini
+
 flutter:
   uses-material-design: true
   assets:

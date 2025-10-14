@@ -23,10 +23,6 @@ class _HomeScreenState extends m.State<HomeScreen>
   late m.AnimationController _progressController;
   late m.Animation<double> _progressAnimation;
 
-  late m.AnimationController _contentController;
-  late m.Animation<double> _slideAnimation;
-  late m.Animation<double> _fadeAnimation;
-
   @override
   void initState() {
     super.initState();
@@ -38,10 +34,11 @@ class _HomeScreenState extends m.State<HomeScreen>
       m.CurvedAnimation(parent: _progressController, curve: m.Curves.easeInOut),
     );
 
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    m.WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SleepProvider>().loadData().then((_) {
-        _updateProgress();
+        if (mounted) {
+          _updateProgress();
+        }
       });
     });
   }
@@ -61,7 +58,6 @@ class _HomeScreenState extends m.State<HomeScreen>
   @override
   void dispose() {
     _progressController.dispose();
-    _contentController.dispose();
     super.dispose();
   }
 
@@ -129,40 +125,18 @@ class _HomeScreenState extends m.State<HomeScreen>
 
     return Consumer<SleepProvider>(
       builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return Scaffold(
-            child: m.Container(
-              decoration: const m.BoxDecoration(
-                gradient: m.LinearGradient(
-                  begin: m.Alignment.topCenter,
-                  end: m.Alignment.bottomCenter,
-                  colors: [
-                    m.Color(0xFF0A0118),
-                    m.Color(0xFF1A0B2E),
-                    m.Color(0xFF0A0118),
-                  ],
-                ),
-              ),
-              child: const m.Center(
-                child: m.CircularProgressIndicator(color: m.Color(0xFF8B5CF6)),
-              ),
+        if (provider.isLoading && provider.todayRecord == null) {
+          return const m.Scaffold(
+            body: m.Center(
+              child: m.CircularProgressIndicator(color: m.Color(0xFF8B5CF6)),
             ),
           );
         }
 
         final duration = provider.calculateDuration();
 
-        return Scaffold(
-          // headers: [UiAppBar(title: "test")],
-          floatingHeader: true,
-          floatingFooter: true,
-          footers: [
-            ShadcnBottomNav(
-              currentIndex: navProvider.index,
-              onTap: (i) => navProvider.setIndex(context, i),
-            ),
-          ],
-          child: m.Container(
+        return m.Scaffold(
+          body: m.Container(
             decoration: const m.BoxDecoration(
               gradient: m.LinearGradient(
                 begin: m.Alignment.topCenter,
@@ -182,11 +156,8 @@ class _HomeScreenState extends m.State<HomeScreen>
                     crossAxisAlignment: m.CrossAxisAlignment.start,
                     children: [
                       const m.SizedBox(height: 32),
-
-                      HeaderWithGreeting(),
-
-                      const SizedBox(height: 32),
-
+                      const HeaderWithGreeting(),
+                      const m.SizedBox(height: 32),
                       m.Row(
                         children: [
                           m.Expanded(
@@ -197,7 +168,7 @@ class _HomeScreenState extends m.State<HomeScreen>
                               icon: m.Icons.bedtime,
                               gradientColors: const [
                                 AppTheme.primaryColor,
-                                AppTheme.deepPrimary,
+                                AppTheme.deepPrimary
                               ],
                               onTap: () => pickTime(isSleepTime: true),
                             ),
@@ -211,38 +182,23 @@ class _HomeScreenState extends m.State<HomeScreen>
                               icon: m.Icons.wb_sunny_outlined,
                               gradientColors: const [
                                 m.Color(0xFF06B6D4),
-                                m.Color(0xFF0891B2),
+                                m.Color(0xFF0891B2)
                               ],
                               onTap: () => pickTime(isSleepTime: false),
                             ),
                           ),
                         ],
                       ),
-
-                      const m.SizedBox(height: 40),
-
-                      Button(
-                        onPressed: () {
-                          provider.loadData().then((_) => _updateProgress());
+                      const m.SizedBox(height: 24),
+                      // ## KODE FITUR STRES ADA DI SINI ##
+                      StressInputCard(
+                        stressLevel: provider.stressLevel,
+                        onChanged: (value) {
+                          provider.setStressLevel(value);
+                          _updateProgress();
                         },
-                        style: const ButtonStyle.outline().withBorder(
-                          border: m.Border.all(
-                            color: m.Colors.white.withValues(alpha: 0.1),
-                          ),
-                        ),
-                        child: Row(
-                          spacing: 10,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(LucideIcons.loader, size: 23, color: Colors.white,),
-                            const Text("Hitung Skor", style: TextStyle(color: Colors.white),),
-                          ],
-                        ),
                       ),
-
                       const m.SizedBox(height: 40),
-
-                      // Quality Circle
                       m.Center(
                         child: m.Column(
                           children: [
@@ -262,21 +218,17 @@ class _HomeScreenState extends m.State<HomeScreen>
                                         mainAxisAlignment:
                                             m.MainAxisAlignment.center,
                                         children: [
-                                          const m.Text(
-                                            "Quality",
-                                            style: m.TextStyle(
-                                              color: m.Colors.white70,
-                                              fontSize: 14,
-                                            ),
-                                          ),
+                                          const m.Text("Quality",
+                                              style: m.TextStyle(
+                                                  color: m.Colors.white70,
+                                                  fontSize: 14)),
                                           const m.SizedBox(height: 8),
                                           m.Text(
                                             "${(_progressAnimation.value * 100).toInt()}%",
                                             style: const m.TextStyle(
-                                              color: m.Colors.white,
-                                              fontSize: 48,
-                                              fontWeight: m.FontWeight.bold,
-                                            ),
+                                                color: m.Colors.white,
+                                                fontSize: 48,
+                                                fontWeight: m.FontWeight.bold),
                                           ),
                                         ],
                                       ),
@@ -290,70 +242,54 @@ class _HomeScreenState extends m.State<HomeScreen>
                               mainAxisAlignment: m.MainAxisAlignment.center,
                               children: [
                                 _buildLegend(
-                                  "Deep Sleep",
-                                  const m.Color(0xFF8B5CF6),
-                                ),
+                                    "Deep Sleep", const m.Color(0xFF8B5CF6)),
                                 const m.SizedBox(width: 32),
                                 _buildLegend(
-                                  "Light Sleep",
-                                  const m.Color(0xFF06B6D4),
-                                ),
+                                    "Light Sleep", const m.Color(0xFF06B6D4)),
                               ],
                             ),
                           ],
                         ),
                       ),
-
                       const m.SizedBox(height: 32),
-
                       m.Container(
                         padding: const m.EdgeInsets.all(20),
                         decoration: m.BoxDecoration(
-                          color: m.Colors.white.withValues(alpha: 0.05),
+                          color: m.Colors.white.withOpacity(0.05),
                           borderRadius: m.BorderRadius.circular(20),
                           border: m.Border.all(
-                            color: m.Colors.white.withValues(alpha: 0.1),
-                          ),
+                              color: m.Colors.white.withOpacity(0.1)),
                         ),
                         child: m.Row(
                           children: [
                             m.Container(
                               padding: const m.EdgeInsets.all(12),
                               decoration: m.BoxDecoration(
-                                gradient: const m.LinearGradient(
-                                  colors: [
-                                    m.Color(0xFF8B5CF6),
-                                    m.Color(0xFF6366F1),
-                                  ],
-                                ),
+                                gradient: const m.LinearGradient(colors: [
+                                  m.Color(0xFF8B5CF6),
+                                  m.Color(0xFF6366F1)
+                                ]),
                                 borderRadius: m.BorderRadius.circular(12),
                               ),
-                              child: const m.Icon(
-                                m.Icons.alarm,
-                                color: m.Colors.white,
-                                size: 28,
-                              ),
+                              child: const m.Icon(m.Icons.alarm,
+                                  color: m.Colors.white, size: 28),
                             ),
                             const m.SizedBox(width: 16),
                             m.Expanded(
                               child: m.Column(
                                 crossAxisAlignment: m.CrossAxisAlignment.start,
                                 children: [
-                                  const m.Text(
-                                    "Asleep",
-                                    style: m.TextStyle(
-                                      color: m.Colors.white70,
-                                      fontSize: 13,
-                                    ),
-                                  ),
+                                  const m.Text("Asleep",
+                                      style: m.TextStyle(
+                                          color: m.Colors.white70,
+                                          fontSize: 13)),
                                   const m.SizedBox(height: 4),
                                   m.Text(
                                     formatTime(provider.jamTidur),
                                     style: const m.TextStyle(
-                                      color: m.Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: m.FontWeight.bold,
-                                    ),
+                                        color: m.Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: m.FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -361,160 +297,18 @@ class _HomeScreenState extends m.State<HomeScreen>
                             m.Column(
                               crossAxisAlignment: m.CrossAxisAlignment.end,
                               children: [
-                                const m.Text(
-                                  "Time to Sleep",
-                                  style: m.TextStyle(
-                                    color: m.Colors.white70,
-                                    fontSize: 13,
-                                  ),
-                                ),
+                                const m.Text("Time to Sleep",
+                                    style: m.TextStyle(
+                                        color: m.Colors.white70, fontSize: 13)),
                                 const m.SizedBox(height: 4),
                                 m.Text(
                                   formatDuration(duration),
                                   style: const m.TextStyle(
-                                    color: m.Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: m.FontWeight.bold,
-                                  ),
+                                      color: m.Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: m.FontWeight.bold),
                                 ),
                               ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const m.SizedBox(height: 32),
-
-                      m.Row(
-                        mainAxisAlignment: m.MainAxisAlignment.spaceBetween,
-                        children: [
-                          const m.Text(
-                            "Weekly Status",
-                            style: m.TextStyle(
-                              color: m.Colors.white,
-                              fontSize: 20,
-                              fontWeight: m.FontWeight.bold,
-                            ),
-                          ),
-                          m.Text(
-                            "${provider.weeklyRecords.length} records",
-                            style: const m.TextStyle(
-                              color: m.Colors.white54,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const m.SizedBox(height: 16),
-
-                      m.Container(
-                        padding: const m.EdgeInsets.all(20),
-                        decoration: m.BoxDecoration(
-                          color: m.Colors.white,
-                          borderRadius: m.BorderRadius.circular(20),
-                        ),
-                        child: m.Column(
-                          children: [
-                            m.Row(
-                              mainAxisAlignment:
-                                  m.MainAxisAlignment.spaceBetween,
-                              children: [
-                                const m.Text(
-                                  "Time in bed",
-                                  style: m.TextStyle(
-                                    color: m.Colors.black87,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                m.Row(
-                                  children: [
-                                    m.Text(
-                                      formatDurationFromMinutes(
-                                        provider.weeklyAverageDuration,
-                                      ),
-                                      style: const m.TextStyle(
-                                        color: m.Colors.black54,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const m.SizedBox(width: 16),
-                                    m.Text(
-                                      formatDuration(duration),
-                                      style: const m.TextStyle(
-                                        color: m.Colors.black87,
-                                        fontSize: 14,
-                                        fontWeight: m.FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const m.SizedBox(height: 12),
-                            m.Container(
-                              height: 8,
-                              decoration: m.BoxDecoration(
-                                borderRadius: m.BorderRadius.circular(4),
-                                color: m.Colors.grey.shade200,
-                              ),
-                              child: m.FractionallySizedBox(
-                                alignment: m.Alignment.centerLeft,
-                                widthFactor: duration != null
-                                    ? math.min(duration.inMinutes / 540, 1.0)
-                                    : 0.0,
-                                child: m.Container(
-                                  decoration: m.BoxDecoration(
-                                    borderRadius: m.BorderRadius.circular(4),
-                                    gradient: const m.LinearGradient(
-                                      colors: [
-                                        m.Color(0xFF06B6D4),
-                                        m.Color(0xFF8B5CF6),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const m.SizedBox(height: 24),
-                            m.SizedBox(
-                              width: double.infinity,
-                              child: m.ElevatedButton(
-                                onPressed: () {
-                                  m.Navigator.pushReplacementNamed(
-                                    context,
-                                    '/dashboard',
-                                  );
-                                },
-                                style: m.ElevatedButton.styleFrom(
-                                  backgroundColor: const m.Color(0xFF8B5CF6),
-                                  foregroundColor: m.Colors.white,
-                                  padding: const m.EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: m.RoundedRectangleBorder(
-                                    borderRadius: m.BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: m.Row(
-                                  mainAxisAlignment: m.MainAxisAlignment.center,
-                                  children: [
-                                    const m.Icon(
-                                      m.Icons.home_outlined,
-                                      size: 20,
-                                    ),
-                                    const m.SizedBox(width: 8),
-                                    const m.Text(
-                                      "Back to Home",
-                                      style: m.TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: m.FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
                             ),
                           ],
                         ),
