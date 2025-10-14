@@ -32,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 1500),
     );
 
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SleepProvider>().loadData().then((_) {
         _updateProgress();
