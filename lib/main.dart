@@ -1,6 +1,7 @@
 import 'package:capstone/provider/nav_provider.dart';
 import 'package:capstone/provider/sleep_provider.dart';
 import 'package:capstone/provider/theme_provider.dart';
+import 'package:capstone/provider/user_provider.dart'; 
 import 'package:capstone/ui/pages/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,8 +26,9 @@ class CapstoneApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
         ChangeNotifierProvider(create: (_) => SleepProvider()),
         ChangeNotifierProvider(create: (_) => NavProvider()),
+        ChangeNotifierProvider(
+            create: (_) => UserProvider()), 
       ],
-      
       child: MaterialApp(
         title: "Project Owl",
         debugShowCheckedModeBanner: false,
@@ -41,10 +43,6 @@ class CapstoneApp extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryPurple,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(50),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),
